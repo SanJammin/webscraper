@@ -4,6 +4,7 @@ import { getHeadingFromHTML } from "./crawl";
 import { getFirstParagraphFromHTML } from "./crawl";
 import { getURLsFromHTML } from "./crawl";
 import { getImagesFromHTML } from "./crawl";
+import { extractPageData } from "./crawl";
 
 test("removes https:// from url", () => {
     expect(normalizeURL("https://www.boot.dev/blog/path/")).toBe("www.boot.dev/blog/path");
@@ -212,4 +213,66 @@ test("handles image URLs with fragments correctly", () => {
     const baseURL = "https://www.boot.dev";
     const expectedImageURLs = ["https://www.boot.dev/image.jpg#section"];
     expect(getImagesFromHTML(html, baseURL)).toEqual(expectedImageURLs);
+});
+
+test("extractPageData returns correct data from html", () => {
+    const html = `
+        <html>
+            <body>
+                <h1>Test Heading</h1>
+                <p>Test paragraph</p>
+                <a href="https://www.boot.dev">Boot.dev</a>
+                <img src="https://www.boot.dev/image.jpg" />
+            </body>
+        </html>
+    `;
+    const pageURL = "https://www.boot.dev";
+    const expectedData = {
+        heading: "Test Heading",
+        paragraph: "Test paragraph",
+        urls: ["https://www.boot.dev"],
+        images: ["https://www.boot.dev/image.jpg"]
+    };
+    expect(extractPageData(html, pageURL)).toEqual(expectedData);
+});
+
+test("extractPageData handles missing data correctly", () => {
+    const html = `
+        <html>
+            <body>
+                <h1>Test Heading</h1>
+            </body>
+        </html>
+    `;
+    const pageURL = "https://www.boot.dev";
+    const expectedData = {
+        heading: "Test Heading",
+        paragraph: "",
+        urls: [],
+        images: []
+    };
+    expect(extractPageData(html, pageURL)).toEqual(expectedData);
+});
+
+test("extractPageData handles multiple data points correctly", () => {
+    const html = `
+        <html>
+            <body>
+                <h1>Test Heading</h1>
+                <p>Test paragraph</p>
+                <a href="https://www.boot.dev">Boot.dev</a>
+                <a href="https://www.example.com">Example</a>
+                <img src="https://www.boot.dev/image.jpg" />
+                <img src="https://www.example.com/image.jpg" />
+            </body>
+        </html>
+    `;
+    const pageURL = "https://www.boot.dev";
+    const expectedData = {
+        heading: "Test Heading",
+        paragraph: "Test paragraph",
+        urls: ["https://www.boot.dev", "https://www.example.com"],
+        images: ["https://www.boot.dev/image.jpg", "https://www.example.com/image.jpg"]
+    };
+    expect(extractPageData(html, pageURL)).toEqual(expectedData);
 });
