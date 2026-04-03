@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import { normalizeURL } from "./crawl";
 import { getHeadingFromHTML } from "./crawl";
 import { getFirstParagraphFromHTML } from "./crawl";
+import { getURLsFromHTML } from "./crawl";
 
 test("removes https:// from url", () => {
     expect(normalizeURL("https://www.boot.dev/blog/path/")).toBe("www.boot.dev/blog/path");
@@ -77,4 +78,71 @@ test("prioritises the return of the first p tag inside of a main section, rather
 
 test("if no main section p tag, then return first p tag", () => {
     expect(getFirstParagraphFromHTML("<html><body><p>First paragraph</p><main><h1>Main section heading</h1></main></body></html>")).toBe("First paragraph");
+});
+
+test("make sure all URLs are returned from html", () => {
+    const html = `
+        <html>
+            <body>
+                <a href="https://www.boot.dev">Boot.dev</a>
+                <a href="/about">About</a>
+                <a href="https://crawler-test.com">Example</a>
+            </body>
+        </html>
+    `;
+    const baseURL = "https://www.boot.dev";
+    const expectedURLs = ["https://www.boot.dev", "https://www.boot.dev/about", "https://www.example.com"];
+    expect(getURLsFromHTML(html, baseURL)).toEqual(expectedURLs);
+});
+
+test("handles relative URLs correctly", () => {
+    const html = `
+        <html>
+            <body>
+                <a href="/contact">Contact</a>
+            </body>
+        </html>
+    `;
+    const baseURL = "https://www.boot.dev";
+    const expectedURLs = ["https://www.boot.dev/contact"];
+    expect(getURLsFromHTML(html, baseURL)).toEqual(expectedURLs);
+});
+
+test("handles absolute URLs correctly", () => {
+    const html = `
+        <html>
+            <body>
+                <a href="https://crawler-test.com">Example</a>
+            </body>
+        </html>
+    `;
+    const baseURL = "https://www.boot.dev";
+    const expectedURLs = ["https://crawler-test.com"];
+    expect(getURLsFromHTML(html, baseURL)).toEqual(expectedURLs);
+});
+
+test("handles URLs with fragments correctly", () => {
+    const html = `
+        <html>
+            <body>
+                <a href="https://www.boot.dev#section">Boot.dev Section</a>
+            </body>
+        </html>
+    `;
+    const baseURL = "https://www.boot.dev";
+    const expectedURLs = ["https://www.boot.dev#section"];
+    expect(getURLsFromHTML(html, baseURL)).toEqual(expectedURLs);
+});
+
+test("handles URLs with query strings correctly", () => {
+    const html = `
+        <html>
+            <body>
+                <a href="https://www.boot.dev/search?q=crawler">Boot.dev Search</a>
+            </body>
+        </html>
+    `;
+    const baseURL = "https://www.boot.dev";
+    const expectedURLs = ["https://www.boot.dev/search?q=crawler"];
+    expect(getURLsFromHTML(html, baseURL)).toEqual(expectedURLs);
 });

@@ -36,3 +36,5 @@ export function getFirstParagraphFromHTML(html: string): string {
 
     return "";
 }
+
+export function getURLsFromHTML(html: string, baseURL: string): string[];
