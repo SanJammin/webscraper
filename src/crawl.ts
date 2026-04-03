@@ -77,3 +77,19 @@ export function getImagesFromHTML(html: string, baseURL: string): string[] {
     });
     return imageURLs;
 }
+
+type ExtractedPageData = {
+    title: string;
+    description: string;
+    urls: string[];
+    imageUrls: string[];
+};
+
+export function extractPageData(html: string, pageURL: string): ExtractedPageData {
+    return {
+        title: getHeadingFromHTML(html),
+        description: getFirstParagraphFromHTML(html),
+        urls: getURLsFromHTML(html, pageURL),
+        imageUrls: getImagesFromHTML(html, pageURL)
+    };
+}
