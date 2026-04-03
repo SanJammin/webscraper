@@ -3,6 +3,7 @@ import { normalizeURL } from "./crawl";
 import { getHeadingFromHTML } from "./crawl";
 import { getFirstParagraphFromHTML } from "./crawl";
 import { getURLsFromHTML } from "./crawl";
+import { getImagesFromHTML } from "./crawl";
 
 test("removes https:// from url", () => {
     expect(normalizeURL("https://www.boot.dev/blog/path/")).toBe("www.boot.dev/blog/path");
@@ -145,4 +146,70 @@ test("handles URLs with query strings correctly", () => {
     const baseURL = "https://www.boot.dev";
     const expectedURLs = ["https://www.boot.dev/search?q=crawler"];
     expect(getURLsFromHTML(html, baseURL)).toEqual(expectedURLs);
+});
+
+test("getImagesFromHTML returns all image URLs from html", () => {
+    const html = `
+        <html>
+            <body>
+                <img src="https://www.boot.dev/image1.jpg" />
+                <img src="/image2.jpg" />
+            </body>
+        </html>
+    `;
+    const baseURL = "https://www.boot.dev";
+    const expectedImageURLs = ["https://www.boot.dev/image1.jpg", "https://www.boot.dev/image2.jpg"];
+    expect(getImagesFromHTML(html, baseURL)).toEqual(expectedImageURLs);
+});
+
+test("handles relative image URLs correctly", () => {
+    const html = `
+        <html>
+            <body>
+                <img src="/image.jpg" />
+            </body>
+        </html>
+    `;
+    const baseURL = "https://www.boot.dev";
+    const expectedImageURLs = ["https://www.boot.dev/image.jpg"];
+    expect(getImagesFromHTML(html, baseURL)).toEqual(expectedImageURLs);
+});
+
+test("handles absolute image URLs correctly", () => {
+    const html = `
+        <html>
+            <body>
+                <img src="https://www.boot.dev/image.jpg" />
+            </body>
+        </html>
+    `;
+    const baseURL = "https://www.boot.dev";
+    const expectedImageURLs = ["https://www.boot.dev/image.jpg"];
+    expect(getImagesFromHTML(html, baseURL)).toEqual(expectedImageURLs);
+});
+
+test("handles image URLs with query strings correctly", () => {
+    const html = `
+        <html>
+            <body>
+                <img src="https://www.boot.dev/image.jpg?size=large" />
+            </body>
+        </html>
+    `;
+    const baseURL = "https://www.boot.dev";
+    const expectedImageURLs = ["https://www.boot.dev/image.jpg?size=large"];
+    expect(getImagesFromHTML(html, baseURL)).toEqual(expectedImageURLs);
+});
+
+test("handles image URLs with fragments correctly", () => {
+    const html = `
+        <html>
+            <body>
+                <img src="https://www.boot.dev/image.jpg#section" />
+            </body>
+        </html>
+    `;
+    const baseURL = "https://www.boot.dev";
+    const expectedImageURLs = ["https://www.boot.dev/image.jpg#section"];
+    expect(getImagesFromHTML(html, baseURL)).toEqual(expectedImageURLs);
 });
