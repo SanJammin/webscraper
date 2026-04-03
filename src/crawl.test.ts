@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { normalizeURL } from "./crawl";
 import { getHeadingFromHTML } from "./crawl";
+import { getFirstParagraphFromHTML } from "./crawl";
 
 test("removes https:// from url", () => {
     expect(normalizeURL("https://www.boot.dev/blog/path/")).toBe("www.boot.dev/blog/path");
@@ -48,4 +49,32 @@ test("returns a h2 tag if there is no h1 tag", () => {
 
 test("returns an empty string if there are no h1 or h2 tags", () => {
     expect(getHeadingFromHTML("<html><body><p>No headings here</p></body></html>")).toBe("");
+});
+
+test("return first paragraph from html", () => {
+    expect(getFirstParagraphFromHTML("<html><body><p>First paragraph</p><p>Second paragraph</p></body></html>")).toBe("First paragraph");
+});
+
+test("handles p tags with attributes", () => {
+    expect(getFirstParagraphFromHTML("<html><body><p class='paragraph'>Paragraph with class</p></body></html>")).toBe("Paragraph with class");
+});
+
+test("handles p tags with nested elements", () => {
+    expect(getFirstParagraphFromHTML("<html><body><p>Paragraph with <span>nested</span> elements</p></body></html>")).toBe("Paragraph with nested elements");
+});
+
+test("returns an empty string if there are no p tags", () => {
+    expect(getFirstParagraphFromHTML("<html><body><h1>No paragraphs here</h1></body></html>")).toBe("");
+});
+
+test("returns the text content of the first p tag even if there are multiple p tags", () => {
+    expect(getFirstParagraphFromHTML("<html><body><p>First paragraph</p><p>Second paragraph</p></body></html>")).toBe("First paragraph");
+});
+
+test("prioritises the return of the first p tag inside of a main section, rather than actual first p tag", () => {
+    expect(getFirstParagraphFromHTML("<html><body><p>First paragraph</p><main><p>Main section paragraph</p></main></body></html>")).toBe("Main section paragraph");
+});
+
+test("if no main section p tag, then return first p tag", () => {
+    expect(getFirstParagraphFromHTML("<html><body><p>First paragraph</p><main><h1>Main section heading</h1></main></body></html>")).toBe("First paragraph");
 });
