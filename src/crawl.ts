@@ -18,3 +18,21 @@ export function getHeadingFromHTML(html: string): string {
         return "";
     }
 }
+
+export function getFirstParagraphFromHTML(html: string): string {
+    const dom = new JSDOM(html);
+    const p = dom.window.document.querySelector("p");
+    const main = dom.window.document.querySelector("main");
+    if (main) {
+        const mainP = main.querySelector("p");
+        if (mainP) {
+            return mainP.textContent?.trim() || "";
+        }
+    }
+    
+    if (p) {
+        return p.textContent?.trim() || "";
+    }
+
+    return "";
+}
