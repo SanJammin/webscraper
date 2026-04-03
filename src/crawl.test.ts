@@ -228,10 +228,10 @@ test("extractPageData returns correct data from html", () => {
     `;
     const pageURL = "https://www.boot.dev";
     const expectedData = {
-        heading: "Test Heading",
-        paragraph: "Test paragraph",
+        title: "Test Heading",
+        description: "Test paragraph",
         urls: ["https://www.boot.dev"],
-        images: ["https://www.boot.dev/image.jpg"]
+        imageUrls: ["https://www.boot.dev/image.jpg"]
     };
     expect(extractPageData(html, pageURL)).toEqual(expectedData);
 });
@@ -246,10 +246,10 @@ test("extractPageData handles missing data correctly", () => {
     `;
     const pageURL = "https://www.boot.dev";
     const expectedData = {
-        heading: "Test Heading",
-        paragraph: "",
+        title: "Test Heading",
+        description: "",
         urls: [],
-        images: []
+        imageUrls: []
     };
     expect(extractPageData(html, pageURL)).toEqual(expectedData);
 });
@@ -269,10 +269,10 @@ test("extractPageData handles multiple data points correctly", () => {
     `;
     const pageURL = "https://www.boot.dev";
     const expectedData = {
-        heading: "Test Heading",
-        paragraph: "Test paragraph",
+        title: "Test Heading",
+        description: "Test paragraph",
         urls: ["https://www.boot.dev", "https://www.example.com"],
-        images: ["https://www.boot.dev/image.jpg", "https://www.example.com/image.jpg"]
+        imageUrls: ["https://www.boot.dev/image.jpg", "https://www.example.com/image.jpg"]
     };
     expect(extractPageData(html, pageURL)).toEqual(expectedData);
 });
