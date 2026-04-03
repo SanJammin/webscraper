@@ -1,4 +1,5 @@
 import { JSDOM } from "jsdom";
+import { url } from "node:inspector";
 
 export function normalizeURL(url: string): string {
     const urlObj = new URL(url);
@@ -37,4 +38,24 @@ export function getFirstParagraphFromHTML(html: string): string {
     return "";
 }
 
-export function getURLsFromHTML(html: string, baseURL: string): string[];
+export function getURLsFromHTML(html: string, baseURL: string): string[] {
+    const dom = new JSDOM(html);
+    const aTags = dom.window.document.querySelectorAll("a");
+    const urls: string[] = [];
+    aTags.forEach((aTag) => {
+        const href = aTag.getAttribute("href");
+        if (href) {
+            try {
+                const urlObj = new URL(href, baseURL);
+                if (urlObj.pathname === "/") {
+                    urls.push(urlObj.origin + urlObj.search + urlObj.hash);
+                } else {
+                    urls.push(urlObj.href);
+                }
+            } catch (error) {
+                console.log(`Invalid URL: ${href} - ${error}`);
+            }
+        }
+    });
+    return urls;
+}
