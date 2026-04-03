@@ -59,3 +59,21 @@ export function getURLsFromHTML(html: string, baseURL: string): string[] {
     });
     return urls;
 }
+
+export function getImagesFromHTML(html: string, baseURL: string): string[] {
+    const dom = new JSDOM(html);
+    const imgTags = dom.window.document.querySelectorAll("img");
+    const imageURLs: string[] = [];
+    imgTags.forEach((imgTag) => {
+        const src = imgTag.getAttribute("src");
+        if (src) {
+            try {
+                const urlObj = new URL(src, baseURL);
+                imageURLs.push(urlObj.href);
+            } catch (error) {
+                console.log(`Invalid image URL: ${src} - ${error}`);
+            }
+        }
+    });
+    return imageURLs;
+}
