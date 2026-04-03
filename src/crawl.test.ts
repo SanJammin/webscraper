@@ -91,7 +91,7 @@ test("make sure all URLs are returned from html", () => {
         </html>
     `;
     const baseURL = "https://www.boot.dev";
-    const expectedURLs = ["https://www.boot.dev", "https://www.boot.dev/about", "https://www.example.com"];
+    const expectedURLs = ["https://www.boot.dev", "https://www.boot.dev/about", "https://crawler-test.com"];
     expect(getURLsFromHTML(html, baseURL)).toEqual(expectedURLs);
 });
 
