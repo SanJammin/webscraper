@@ -1,9 +1,9 @@
 {
     "compilerOptions": {
         "target": "esnext",
-        "module": "esnext",
+        "module": "nodenext",
         "strict": true,
-        "moduleResolution": "Node"
+        "moduleResolution": "nodenext"
     },
     "include": ["./src/**/*.ts"],
     "exclude": ["node_modules"]
