@@ -1,10 +1,10 @@
 import { expect, test } from "vitest";
-import { normalizeURL } from "./crawl";
-import { getHeadingFromHTML } from "./crawl";
-import { getFirstParagraphFromHTML } from "./crawl";
-import { getURLsFromHTML } from "./crawl";
-import { getImagesFromHTML } from "./crawl";
-import { extractPageData } from "./crawl";
+import { normalizeURL } from "./crawl.js";
+import { getHeadingFromHTML } from "./crawl.js";
+import { getFirstParagraphFromHTML } from "./crawl.js";
+import { getURLsFromHTML } from "./crawl.js";
+import { getImagesFromHTML } from "./crawl.js";
+import { extractPageData } from "./crawl.js";
 
 test("removes https:// from url", () => {
     expect(normalizeURL("https://www.boot.dev/blog/path/")).toBe("www.boot.dev/blog/path");

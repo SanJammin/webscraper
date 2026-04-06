@@ -1,4 +1,4 @@
-import { crawlPage} from "./crawl";
+import { crawlPage} from "./crawl.js";
 
 async function main() {
     const args = process.argv.slice(2);
