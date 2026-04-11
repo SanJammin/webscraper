@@ -80,19 +80,19 @@ export function getImagesFromHTML(html: string, baseURL: string): string[] {
 
 export type ExtractedPageData = {
     heading: string;
-    description: string;
+    first_paragraph: string;
     outgoing_links: string[];
-    image_links: string[];
+    image_urls: string[];
     url: string;
 };
 
 export function extractPageData(html: string, pageURL: string): ExtractedPageData {
     return {
+        url: pageURL,
         heading: getHeadingFromHTML(html),
-        description: getFirstParagraphFromHTML(html),
+        first_paragraph: getFirstParagraphFromHTML(html),
         outgoing_links: getURLsFromHTML(html, pageURL),
-        image_links: getImagesFromHTML(html, pageURL),
-        url: pageURL
+        image_urls: getImagesFromHTML(html, pageURL),
     };
 }
 
