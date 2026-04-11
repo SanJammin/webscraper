@@ -168,3 +168,8 @@ export class ConcurrentCrawler {
         return this.pages;
     }
 }
+
+export async function crawlSiteAsync(baseURL: string, maxConcurrency: number): Promise<Record<string, number>> {
+    const crawler = new ConcurrentCrawler(baseURL, maxConcurrency);
+    return await crawler.crawl();
+}
