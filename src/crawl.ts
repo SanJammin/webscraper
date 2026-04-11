@@ -146,7 +146,7 @@ export class ConcurrentCrawler {
                 const html = await response.text();
                 return html;
             } catch (error) {
-                console.error(`Error fetching ${url}: ${error}`);
+                console.error("Error fetching:", url, error);
                 return "";
             }
         });
@@ -161,12 +161,12 @@ export class ConcurrentCrawler {
             return;
         }
 
-        if(!this.addPageVisit(normalizedCurrentURL)) {
+        if (baseHost !== currentHost) {
+            console.log(`Skipping ${currentURL} - outside of base URL`);
             return;
         }
 
-        if (baseHost !== currentHost) {
-            console.log(`Skipping ${currentURL} - outside of base URL`);
+        if(!this.addPageVisit(normalizedCurrentURL)) {
             return;
         }
 
