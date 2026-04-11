@@ -15,7 +15,15 @@ async function main() {
     const maxPages = parseInt(args[2]);
 
     console.log(`Crawler is starting at base URL: ${baseURL}`);
-    console.log(await crawlSiteAsync(baseURL, maxConcurrency, maxPages));
+    const pages = await crawlSiteAsync(baseURL, maxConcurrency, maxPages);
+    console.log("Finished crawling.");
+    const firstPage = Object.values(pages)[0];
+    if (firstPage) {
+        console.log(
+            `First page record: ${firstPage["url"]} - ${firstPage["heading"]}`,
+        );
+    }
+
 }
 
 main();
