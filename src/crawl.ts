@@ -161,6 +161,10 @@ export class ConcurrentCrawler {
             return;
         }
 
+        if(!this.addPageVisit(normalizedCurrentURL)) {
+            return;
+        }
+
         if (baseHost !== currentHost) {
             console.log(`Skipping ${currentURL} - outside of base URL`);
             return;
