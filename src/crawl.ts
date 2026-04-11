@@ -1,4 +1,5 @@
 import { JSDOM } from "jsdom";
+import pLimit from "p-limit";
 
 export function normalizeURL(url: string): string {
     const urlObj = new URL(url);
@@ -93,60 +94,77 @@ export function extractPageData(html: string, pageURL: string): ExtractedPageDat
     };
 }
 
-export async function getHTML(url: string): Promise<string> {
-    try {
-        const response = await fetch(url, {
-            headers: {"User-Agent": "BootCrawler/1.0"}
+export class ConcurrentCrawler {
+    baseURL: string;
+    pages: Record<string, number>;
+    limit: ReturnType<typeof pLimit>;
+
+    constructor(baseURL: string, maxConcurrency: number) {
+        this.baseURL = baseURL;
+        this.pages = {};
+        this.limit = pLimit(maxConcurrency);
+    }
+
+    private addPageVisit(normalizedURL: string): boolean {
+        if (this.pages[normalizedURL]) {
+            this.pages[normalizedURL]++;
+            return false;
+        }
+        this.pages[normalizedURL] = 1;
+        return true;
+    }
+
+    private async getHTML(url: string): Promise<string> {
+        return await this.limit(async () => {
+            try {
+                const response = await fetch(url, {
+                    headers: {"User-Agent": "BootCrawler/1.0"}
+                });
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+                } else if (!response.headers.get("content-type")?.includes("text/html")) {
+                    throw new Error(`Non-HTML content at ${url}: ${response.headers.get("content-type")}`);
+                }
+
+                const html = await response.text();
+                return html;
+            } catch (error) {
+                console.error(`Error fetching ${url}: ${error}`);
+                return "";
+            }
         });
-        if (!response.ok) {
-            throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
-        } else if (!response.headers.get("content-type")?.includes("text/html")) {
-            throw new Error(`Non-HTML content at ${url}: ${response.headers.get("content-type")}`);
+    }
+
+    private async crawlPage(currentURL: string): Promise<void> {
+        const normalizedCurrentURL = normalizeURL(currentURL);
+        const baseHost = new URL(this.baseURL).hostname;
+        const currentHost = new URL(currentURL).hostname;
+
+        if (baseHost !== currentHost) {
+            console.log(`Skipping ${currentURL} - outside of base URL`);
+            return;
         }
 
-        const html = await response.text();
-        return html;
-    } catch (error) {
-        console.error(`Error fetching ${url}: ${error}`);
-        return "";
-    }
-}
+        if (!this.addPageVisit(normalizedCurrentURL)) {
+            console.log(`Already crawled ${currentURL}`);
+            return;
+        }
 
-export async function crawlPage(
-    baseURL: string,
-    currentURL: string,
-    pages: Record<string, number>
-) {
-    const normalizedCurrentURL = normalizeURL(currentURL);
-    const baseHost = new URL(baseURL).hostname;
-    const currentHost = new URL(currentURL).hostname;
-
-    if (baseHost !== currentHost) {
-        console.log(`Skipping ${currentURL} - outside of base URL`);
-        return pages;
-    }
-
-    if (pages[normalizedCurrentURL] > 0) {
-        console.log(`Already crawled ${currentURL}`);
-        pages[normalizedCurrentURL]++;
-        return pages;
-    } else {
         console.log(`Crawling ${currentURL}`);
-        pages[normalizedCurrentURL] = 1;
-    }
+        const html = await this.getHTML(currentURL);
+        console.log(`Fetched ${currentURL} - length: ${html.length}`);
 
-    const html = await getHTML(currentURL);
-    console.log(`Fetched ${currentURL} - length: ${html.length}`);
-
-    const pageURLs = getURLsFromHTML(html, currentURL);
-    if (pageURLs.length === 0) {
-        console.log(`No links found on ${currentURL}`);
-    } else {
-        console.log(`Found ${pageURLs.length} links on ${currentURL}`);
-        for (const url of pageURLs) {
-            pages = await crawlPage(baseURL, url, pages);
+        const pageURLs = getURLsFromHTML(html, currentURL);
+        if (pageURLs.length === 0) {
+            console.log(`No links found on ${currentURL}`);
+        } else {
+            console.log(`Found ${pageURLs.length} links on ${currentURL}`);
+            await Promise.all(pageURLs.map(url => this.crawlPage(url)));
         }
     }
 
-    return pages;
+    async crawl(): Promise<Record<string, number>> {
+        await this.crawlPage(this.baseURL);
+        return this.pages;
+    }
 }
