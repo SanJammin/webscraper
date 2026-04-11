@@ -79,24 +79,26 @@ export function getImagesFromHTML(html: string, baseURL: string): string[] {
 }
 
 type ExtractedPageData = {
-    title: string;
+    heading: string;
     description: string;
-    urls: string[];
-    imageUrls: string[];
+    outgoing_links: string[];
+    image_links: string[];
+    url: string;
 };
 
 export function extractPageData(html: string, pageURL: string): ExtractedPageData {
     return {
-        title: getHeadingFromHTML(html),
+        heading: getHeadingFromHTML(html),
         description: getFirstParagraphFromHTML(html),
-        urls: getURLsFromHTML(html, pageURL),
-        imageUrls: getImagesFromHTML(html, pageURL)
+        outgoing_links: getURLsFromHTML(html, pageURL),
+        image_links: getImagesFromHTML(html, pageURL),
+        url: pageURL
     };
 }
 
 export class ConcurrentCrawler {
     baseURL: string;
-    pages: Record<string, number>;
+    pages: Record<string, ExtractedPageData>;
     limit: ReturnType<typeof pLimit>;
     maxPages: number;
     shouldStop: boolean;
@@ -117,7 +119,6 @@ export class ConcurrentCrawler {
         }
 
         if (this.pages[normalizedURL]) {
-            this.pages[normalizedURL]++;
             return false;
         }
 
@@ -127,7 +128,6 @@ export class ConcurrentCrawler {
             return false;
         }
 
-        this.pages[normalizedURL] = 1;
         return true;
     }
 
@@ -174,12 +174,13 @@ export class ConcurrentCrawler {
         const html = await this.getHTML(currentURL);
         console.log(`Fetched ${currentURL} - length: ${html.length}`);
 
-        const pageURLs = getURLsFromHTML(html, currentURL);
-        if (pageURLs.length === 0) {
+        const data = extractPageData(html, currentURL);
+        this.pages[normalizedCurrentURL] = data;
+        if (data.outgoing_links.length === 0) {
             console.log(`No links found on ${currentURL}`);
         } else {
-            console.log(`Found ${pageURLs.length} links on ${currentURL}`);
-            const tasks = pageURLs.map((url) => {
+            console.log(`Found ${data.outgoing_links.length} links on ${currentURL}`);
+            const tasks = data.outgoing_links.map((url) => {
                 const task = this.crawlPage(url).finally(() => {
                     this.allTasks.delete(task);
                 });
@@ -190,7 +191,7 @@ export class ConcurrentCrawler {
         }
     }
 
-    async crawl(): Promise<Record<string, number>> {
+    async crawl(): Promise<Record<string, ExtractedPageData>> {
         await this.crawlPage(this.baseURL);
         return this.pages;
     }
@@ -200,7 +201,7 @@ export async function crawlSiteAsync(
     baseURL: string, 
     maxConcurrency: number,
     maxPages: number
-): Promise<Record<string, number>> {
+): Promise<Record<string, ExtractedPageData>> {
     const crawler = new ConcurrentCrawler(baseURL, maxConcurrency, maxPages);
     return await crawler.crawl();
 }
