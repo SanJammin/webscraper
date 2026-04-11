@@ -78,7 +78,7 @@ export function getImagesFromHTML(html: string, baseURL: string): string[] {
     return imageURLs;
 }
 
-type ExtractedPageData = {
+export type ExtractedPageData = {
     heading: string;
     description: string;
     outgoing_links: string[];
